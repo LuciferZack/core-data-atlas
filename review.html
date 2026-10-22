@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Core Atlas · 三模型近邻盲评</title><link rel="stylesheet" href="review.css"></head>
+<body><aside style="padding:16px;background:#fff3cc;color:#543c13">公开静态快照 · 点云覆盖 2026-10-21 的 2,368,842 条成功编码；标签统计覆盖 3,485,702 条。不是实时进度。全量明细可回溯；仅评审样例附关键帧，不包含原视频。评分只保存在本浏览器，请导出备份。</aside><header><a href="./">← 返回数据画像</a><p>CORE ATLAS / RETRIEVAL LAB</p><h1>让相似度，接受真实画面的检验。</h1>
+<p>固定 9,000 条候选 · 30 条评审查询 · 原始向量空间 Top10 · 不使用二维图上距离</p></header>
+<main><section class="instructions"><h2>先看证据，再看模型</h2><p>三个数据集各抽 10 条查询；每个模型都在相同的 9,000 条数据中检索，排除同来源的同 Episode。下方 A/B/C 每条查询的模型顺序固定打乱。</p>
+<p>每张拼图是该片段实际编码的 8 帧，按左→右、上→下排列；时间是原视频 PTS。稀疏帧不是完整视频，动作方向、手性或遮挡看不清时，请选“无法判断”。</p>
+<p>长 Episode 可能跨多个场景、包含多个动作，不应强制当成单一场景。请以实际可见内容判断；这轮是小样本诊断，不代表全量数据上的准确率。</p>
+<p>分别评场景、物体、动作、整体任务：2=相关，1=部分相关，0=不相关。原有标签只作弱参考，不是真值。评分仅保存在此浏览器，请导出备份，不会自动上传或汇总同事评分。</p></section>
+<nav><label>查询片段<select id="query"></select></label><button id="previous">上一条</button><button id="next">下一条</button>
+<label>每列展示<select id="topk"><option value="3">Top3 · 先快速评审</option><option value="10">完整 Top10</option></select></label>
+<label class="check"><input type="checkbox" id="reveal">揭晓模型与相似度</label><button id="export">导出评分 JSON</button></nav>
+<p id="notice" role="status"></p><section id="queryCard"></section><div id="columns"></div>
+<section><h2>人工评审进度</h2><p>只统计你已明确打分的候选；“无法判断”不计分。不同模型重叠的候选共享同一次判断。完整 Top10 均已打分的查询才纳入对应维度的 P@10（仅把 2 分视为相关）。未评完时不排名，不将原标签一致率冒充准确率。</p><div id="summary"></div></section>
+</main><dialog id="zoom"><button id="closeZoom">关闭大图</button><img id="zoomImage" alt="8帧证据大图"></dialog>
+<script src="public-frames.js"></script><script src="pages_adapter.js"></script><script src="review.js"></script></body></html>

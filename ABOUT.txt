@@ -1,0 +1,27 @@
+Core Data Atlas — public static snapshot
+
+Website: https://luciferzack.github.io/core-data-atlas/
+Review: https://luciferzack.github.io/core-data-atlas/review.html
+
+This repository contains only the approved presentation snapshot:
+- CLIP and DINOv2 2D maps of the same 2,368,842 successfully encoded records.
+- Metadata/word-frequency coverage of 3,485,702 records from EgoStandard,
+  EgoFinger 0909 and ABC130k. No EgoFinger 0830.
+- A fixed 30-query, three-model nearest-neighbor review and its 8-frame evidence.
+
+Not included: raw videos, full-dimensional embeddings, live worker databases,
+SSH settings, credentials, or model weights.
+
+The maps use balanced UMAP landmarks and nearest-landmark interpolation.
+Distances/densities are distorted in 2D; blank space is not proof of a data gap.
+Metadata-derived labels are weak labels, not verified visual classifications.
+Missing video, decode failures, unknown labels and unprocessed records are not
+interchangeable. This is a dated snapshot, not a live completion dashboard.
+
+Review scores are stored in the visitor's browser only. Export JSON to share or
+back them up; there is no central rating database or sign-in.
+
+Large maps are intended for desktop browsers with WebGL2. The static PNG links
+provide an alternative. Browser downloads may be substantial on first visit.
+
+This public snapshot is published with the data owner's explicit approval.

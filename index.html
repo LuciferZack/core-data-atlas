@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Core Atlas · 真实视觉分布</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body><aside style="padding:16px;background:#fff3cc;color:#543c13">公开静态快照 · 点云覆盖 2026-10-21 的 2,368,842 条成功编码；标签统计覆盖 3,485,702 条。不是实时进度。全量明细可回溯；仅评审样例附关键帧，不包含原视频。评分只保存在本浏览器，请导出备份。</aside>
+<header>
+<div class="wrap">
+<div class="eyebrow">CORE DATA / VISUAL COVERAGE ATLAS</div>
+<h1>看见数据的分布，<br>找到每一条证据。</h1>
+<p>三个数据集，一张联合视觉地图。每个点都来自真实视频编码，每个标签都保留来源。</p>
+<a href="#atlas">探索联合点云 ↓</a>
+<a id="reviewLink" href="review.html" style="margin-left:24px">三模型近邻盲评 →</a>
+</div>
+</header>
+<main class="wrap">
+<div id="error" role="alert">
+</div>
+<section id="coverage">
+<div class="sectionhead">
+<span>00 / COVERAGE</span>
+<h2>这张图，实际覆盖了什么？</h2>
+</div>
+<p id="snapshot">正在加载真实编码快照…</p>
+<div id="cards" class="cards">
+</div>
+<p class="note">只使用 EgoStandard、EgoFinger 0909 最新版、ABC130k；不含 EgoFinger 0830。缺视频／解码失败不生成点，也不计为成功。尚未编码与缺失标签是两回事。</p>
+</section>
+<section id="atlas">
+<div class="sectionhead">
+<span>01 / VISUAL MAP</span>
+<h2 id="atlasTitle">联合点云 · DINOv2</h2>
+</div>
+<p>三个来源先放入共同特征空间，再统一降维。切换颜色或筛选不会重新摆放点的位置。</p>
+<div class="modelbar"><label>视觉编码模型<select id="model" disabled><option value="dinov2">DINOv2 · 768 维</option><option value="clip">CLIP · 512 维</option></select></label><p>两个模型使用同一批记录、同样的 8 帧与同一组参照 ID，分别降维。切换模型会改变布局；不同图的方向、坐标和区域编号不能直接对应。</p></div>
+<div class="toolbar">
+<label>数据范围<select id="source">
+<option value="all">所有数据集</option>
+<option value="egostandard">EgoStandard</option>
+<option value="egofinger0909">EgoFinger 0909</option>
+<option value="abc130k">ABC130k</option>
+</select>
+</label>
+<label>粒度<select id="kind">
+<option value="all">全部（混合粒度概览）</option>
+<option value="subtask">真实 Subtask</option>
+<option value="episode">未分段 Episode</option>
+</select>
+</label>
+<label>颜色含义<select id="color">
+<option value="source">数据集</option>
+<option value="scenes">场景线索</option>
+<option value="actions">动作标签</option>
+<option value="objects">物体标签</option>
+</select>
+</label>
+<label>类别<select id="category">
+<option value="">全部</option>
+</select>
+</label>
+<label>投影<select id="projection">
+<option value="umap">UMAP 参照点＋近邻插值</option>
+<option value="pca">线性 PCA（对照）</option>
+</select>
+</label>
+<button id="reset">重置视野</button>
+<a id="atlasImage" class="button" href="data/joint-dinov2.png" target="_blank">打开真实点云图片 ↗</a>
+</div>
+<div id="legend" class="legend">
+</div>
+<div class="plot">
+<canvas id="cloud" aria-label="真实视频向量联合点云，拖动平移、滚轮缩放、点击回溯">
+</canvas>
+<div id="plotStatus">正在加载坐标…</div>
+<div class="plotHint">滚轮缩放 · 拖动平移 · 点击点回溯</div>
+</div>
+<div id="selection" class="selection">尚未选择点。点击后显示唯一记录 ID、所属视频和实际时间范围。</div>
+<div class="explain">
+<article>
+<h3>位置代表什么？</h3>
+<p>较近的点倾向于拥有相似的视觉特征，例如背景、物体外观或视角。不是物理位置，也不是时间先后；横轴和纵轴没有“厨房程度”等固定语义。</p>
+</article>
+<article>
+<h3>颜色代表什么？</h3>
+<p>颜色来自已有文本／标签规则，未经过本次视觉模型补标。灰色 Unlabeled 表示标签未知，不代表视频不存在。多标签默认用首标签着色，筛选匹配任一标签。</p>
+</article>
+<article>
+<h3>空白能说明缺数据吗？</h3>
+<p>不能直接说明。降维会改变距离和密度；此版还用了参照点插值。业务缺口应结合场景×动作等实际计数，而不是把二维空白当作结论。</p>
+</article>
+</div>
+<details>
+<summary>完整方法、局限及可复现参数</summary>
+<p id="method">
+</p>
+<p>每条记录在自身时间范围内均匀取 8 帧；逐帧提取当前所选模型的特征，归一化后平均，再归一化。先用三个来源均衡抽取的参照点拟合 PCA 32D 和 UMAP，其他真实向量通过高维近邻插值得到坐标。不是对全部点运行 UMAP 优化；插值可能强化簇感，无人为抖动或按标签摆点。PCA 视图是同一批向量的线性投影对照。</p>
+<p>全体点均有真实记录 ID；未分段 Episode 和真实 Subtask 单独可筛选，不能把两种粒度直接当作同一统计单位。参考 <a href="https://stellarnexrobotics.com/blog#blog-section-3" target="_blank" rel="noreferrer">EgoWorld 博客</a> 的视觉分布与四维标签组织，不复制其类别比例或样本数据。</p>
+</details>
+</section>
+<section id="words">
+<div class="sectionhead">
+<span>02 / TASK LANGUAGE</span>
+<h2 id="wordTitle">任务短语词云 · 全量索引</h2>
+</div>
+<p>任务短语、场景、动作、物体四种词云都统计完整元数据索引，不仅是已编码记录。与点云共用“数据范围／粒度”；切换视觉模型不会改变词频。字号越大，包含该短语或标签的记录越多。</p>
+<div id="wordTabs" class="dimension-tabs" role="group" aria-label="词云维度快捷切换"><button data-dim="phrases" aria-pressed="true">任务短语</button><button data-dim="scenes" aria-pressed="false">场景</button><button data-dim="actions" aria-pressed="false">动作</button><button data-dim="objects" aria-pressed="false">物体</button></div>
+<p id="wordMeaning" class="note">任务短语：从原文提取动词＋核心名词，相同短语归并。</p>
+<div class="toolbar">
+<label class="dimension-select">词云维度<select id="wordDim">
+<option value="phrases">精简任务短语</option>
+<option value="actions">动作</option>
+<option value="objects">物体</option>
+<option value="scenes">场景线索</option>
+</select>
+</label>
+<button id="wordUnknown">未提取／Unlabeled</button>
+<input id="wordSearch" placeholder="检索完整词表与频次" aria-label="检索词表">
+</div>
+<p id="wordStats" class="note">
+</p>
+<canvas id="wordCloud" aria-label="频次驱动的横竖混排任务短语词云">
+</canvas>
+<p id="wordHover" class="note">横排、竖排和颜色仅为排版，不表示类别或时间。</p>
+<details open>
+<summary id="wordListTitle">完整词表（可搜索、分页、点击回溯）</summary>
+<div id="wordList" class="wordlist">
+</div>
+<button id="wordMore">显示更多</button>
+</details>
+<p class="note">短语为保守文本规则派生，不是 VLM 验证标签。每条记录同一短语计一次；多动作片段可以贡献多个短语。无可靠提取结果的记录单列，不编造动作或物体。画布展示高频前 300 项中能排入的部分，完整频次在下方列表。</p>
+</section>
+<section id="trace">
+<div class="sectionhead">
+<span>03 / TRACEABILITY</span>
+<h2>从分布，回到原始记录</h2>
+</div>
+<p id="traceTitle">点击点云、词云或未知项，查看对应的真实记录。</p>
+<div class="tablewrap">
+<table>
+<thead>
+<tr>
+<th>记录位置</th>
+<th>原文</th>
+<th>场景／动作／物体</th>
+<th>时间与详情</th>
+</tr>
+</thead>
+<tbody id="records">
+</tbody>
+</table>
+</div>
+<button id="prev" disabled>上一页</button>
+<button id="next" disabled>下一页</button>
+</section>
+<section id="metrics">
+<div class="sectionhead">
+<span>04 / STRUCTURED METRICS</span>
+<h2>保留数值统计 · 手部运动、时长与位移</h2>
+</div>
+<p class="note">此处独立选择数据集与粒度，统计全量索引，不限于已编码点。手部运动不是动作执行手；人／底座位移是已有 root/head 平移代理，unknown 不等于静止。</p>
+<div class="toolbar">
+<label>数值统计来源<select id="metricSource">
+<option value="abc130k">ABC130k</option>
+<option value="egostandard">EgoStandard</option>
+<option value="egofinger0909">EgoFinger 0909</option>
+</select>
+</label>
+<label>数值统计粒度<select id="metricKind">
+<option value="subtask">真实 Subtask</option>
+<option value="episode">未分段 Episode</option>
+</select>
+</label>
+<button id="metricLoad">加载统计</button>
+</div>
+<p id="metricStatus">点击加载可查看完整数值统计。</p>
+<div class="explain">
+<article>
+<h3>手部运动</h3>
+<div id="metricHands">
+</div>
+</article>
+<article>
+<h3>人／底座位移代理</h3>
+<div id="metricMove">
+</div>
+</article>
+<article>
+<h3>时长分布</h3>
+<div id="metricDuration">
+</div>
+</article>
+</div>
+<details>
+<summary>动作 × 左／右／双手运动（不是语义执行手）</summary>
+<div id="metricActions" class="tablewrap">
+</div>
+</details>
+<details>
+<summary>场景 × 动作少量组合及回溯</summary>
+<div id="metricSparse" class="wordlist">
+</div>
+</details>
+</section>
+<footer>公开静态快照版 · 原始 Core 不被修改 · 预测标签尚未写入 · 缺失不等于零</footer>
+</main>
+<dialog id="detail">
+<button id="close">关闭</button>
+<pre id="detailText">
+</pre>
+</dialog>
+<script src="public-frames.js"></script><script src="pages_adapter.js"></script><script src="word_layout.js">
+</script>
+<script src="app.js">
+</script>
+</body>
+</html>
