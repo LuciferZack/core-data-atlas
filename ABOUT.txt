@@ -24,4 +24,4 @@ back them up; there is no central rating database or sign-in.
 Large maps are intended for desktop browsers with WebGL2. The static PNG links
 provide an alternative. Browser downloads may be substantial on first visit.
 
-This public snapshot is published with the data owner's explicit approval.
+The requesting user explicitly approved public publication of this snapshot.
