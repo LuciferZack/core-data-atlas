@@ -1,9 +1,11 @@
 /* GitHub Pages snapshot adapter: no requests to localhost or company servers. */
 (()=>{'use strict';
 const base=new URL('.',document.baseURI),nativeFetch=window.fetch.bind(window),memo=new Map(),sources=['egostandard','egofinger0909','abc130k'];
-async function json(path){if(!memo.has(path))memo.set(path,(async()=>{const r=await nativeFetch(new URL(path,base));if(!r.ok)throw Error('静态数据读取失败 '+r.status+' '+path);if(path.endsWith('.gz')){if(!window.DecompressionStream)throw Error('请使用支持 gzip 解压的现代浏览器');return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).json()}return r.json()})().catch(e=>{memo.delete(path);throw e}));return memo.get(path)}
+const revision='scene-text-evidence-v2-20261023';
+function assetURL(path){const u=new URL(path,base);u.searchParams.set('v',revision);return u;}
+async function json(path){if(!memo.has(path))memo.set(path,(async()=>{const r=await nativeFetch(assetURL(path));if(!r.ok)throw Error('静态数据读取失败 '+r.status+' '+path);if(path.endsWith('.gz')){if(!window.DecompressionStream)throw Error('请使用支持 gzip 解压的现代浏览器');return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).json()}return r.json()})().catch(e=>{memo.delete(path);throw e}));return memo.get(path)}
 let indexPromise;
-async function index(){if(!indexPromise)indexPromise=nativeFetch(new URL('data/unit-index.bin',base)).then(r=>{if(!r.ok)throw Error('记录索引读取失败');return r.arrayBuffer()}).then(b=>new DataView(b)).catch(e=>{indexPromise=null;throw e});return indexPromise}
+async function index(){if(!indexPromise)indexPromise=nativeFetch(assetURL('data/unit-index.bin')).then(r=>{if(!r.ok)throw Error('记录索引读取失败');return r.arrayBuffer()}).then(b=>new DataView(b)).catch(e=>{indexPromise=null;throw e});return indexPromise}
 async function record(id){const bucket='data/records/'+Math.floor(id/10000)+'.json.gz';const shard=await json(bucket),r=shard[id];if(!r)return null;const labels=await json('data/labels.json.gz');return {id,source:sources[r[0]],episode:r[1],annotation:r[2],kind:r[3]?'subtask':'episode',start_s:r[4],end_s:r[5],duration:r[6],text:r[7],tags:labels[r[8]],label_origin:'Existing weak metadata / rules; frozen public snapshot'};}
 async function records(q){const [v,labels]=await Promise.all([index(),json('data/labels.json.gz')]);const src=q.get('source')||'all',kind=q.get('kind')||'all',dim=q.get('dimension'),label=q.get('label'),action=q.get('action'),phrase=q.get('phrase');const offset=Number(q.get('offset')||0);let allowed=null,pairs=null;
 if(dim||action){allowed=new Set();for(const [sid,tags]of Object.entries(labels))if((!dim||(tags[dim]||[]).includes(label))&&(!action||(tags.actions||[]).includes(action)))allowed.add(Number(sid))}
@@ -21,7 +23,7 @@ else if(p==='api/record')value=await record(Number(q.get('id')));
 else if(p==='api/records')value=await records(q);
 else if(p==='data/labels.json')value=await json('data/labels.json.gz');
 else if(p==='review-data.json')value=await json('review-data.json.gz');
-else return nativeFetch(new URL(p+u.search,base),options);
+else return nativeFetch(assetURL(p+u.search),options);
 return new Response(JSON.stringify(value),{status:200,headers:{'Content-Type':'application/json'}});
 }catch(e){return new Response(JSON.stringify({error:e.message}),{status:503,headers:{'Content-Type':'application/json'}})}};
 })();
